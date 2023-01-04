@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 
 	"example.com/fileUploadApp/awssession"
@@ -10,11 +11,16 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
+var (
+	inputDir = ""
+)
+
 // getListOfFiles will accept a directory
 // path and return a slice of all .csv
 // files in the directory as strings
 func getListOfFiles(inputDir string) []os.DirEntry {
 
+	// create an empty slice
 	var listOfFiles []os.DirEntry
 
 	// read files in the directory
@@ -24,7 +30,7 @@ func getListOfFiles(inputDir string) []os.DirEntry {
 	}
 
 	// if extension is .csv, append
-	// the filename to a slice
+	// the filename to slice
 	for _, f := range files {
 		if strings.HasSuffix(f.Name(), ".csv") {
 			listOfFiles = append(listOfFiles, f)
@@ -34,35 +40,54 @@ func getListOfFiles(inputDir string) []os.DirEntry {
 	return listOfFiles
 }
 
-func main() {
+// openFile will open the passed filename
+// and return the filebytes
+func openFile(f string) *os.File {
 
-	// get list of csvs to be processed
-	listOfFiles := getListOfFiles("./inputFiles")
-	logging.InfoLogger.Printf("list of %d files has been read", len(listOfFiles))
-
-	//setup connection to s3 bucket
-	svc := s3manager.NewUploader(awssession.Sess)
-	logging.InfoLogger.Println("New AWS session connection setup")
-
-	//open file to be uploaded
-	file, err := os.Open("./inputFiles/features_data_set_1.csv")
+	file, err := os.Open(f)
 	if err != nil {
 		logging.ErrorLogger.Println("Failed to open file", err)
 		os.Exit(1)
 	}
-	defer file.Close()
+
+	return file
+
+}
+
+// uploadFile takes filebytes and uploads to the
+// specified S3 bucket
+func uploadFile(f *os.File, svc *s3manager.Uploader, fn string) {
 
 	//upload file to s3
-	_, err = svc.Upload(&s3manager.UploadInput{
+	_, err := svc.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(awssession.Bucket),
-		Key:    aws.String("jan2023test1.csv"),
-		Body:   file,
+		Key:    aws.String(fn),
+		Body:   f,
 	})
 	if err != nil {
 		logging.ErrorLogger.Println("error", err)
 		os.Exit(1)
 	}
+	logging.InfoLogger.Printf("file successfully uploaded %s to s3", fn)
 
-	//print success message
-	logging.InfoLogger.Println("file successfully uploaded to s3")
+}
+
+func main() {
+
+	// get list of csvs to be processed
+	listOfFiles := getListOfFiles(inputDir)
+	logging.InfoLogger.Printf("list of %d files has been read", len(listOfFiles))
+
+	// setup connection to s3 bucket
+	svc := s3manager.NewUploader(awssession.Sess)
+	logging.InfoLogger.Println("New AWS session connection setup")
+
+	// process files and uploade to s3
+	for _, file := range listOfFiles {
+		logging.InfoLogger.Printf("processing file %s\n", file.Name())
+		f := openFile(filepath.Join(inputDir, file.Name()))
+		uploadFile(f, svc, file.Name())
+		f.Close()
+	}
+
 }
