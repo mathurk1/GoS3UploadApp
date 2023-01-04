@@ -4,15 +4,11 @@ import (
 	"fmt"
 	"os"
 
+	"example.com/fileUploadApp/logging"
 	"github.com/spf13/viper"
 )
 
-// var (
-// 	s3bucketname string
-// 	s3region     string
-// )
-
-func ConfigParser() {
+func configParser() {
 
 	viper.SetConfigName("config") // config file name without extension
 	viper.SetConfigType("yaml")
@@ -24,10 +20,10 @@ func ConfigParser() {
 		os.Exit(1)
 	}
 
-	s3bucketname := viper.GetString("awss3config.s3bucket")
-	s3region := viper.GetString("awss3config.s3region")
+	logging.InfoLogger.Println("Viper configurations loaded successfully!")
 
-	fmt.Println(s3bucketname)
-	fmt.Println(s3region)
+}
 
+func init() {
+	configParser()
 }

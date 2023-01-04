@@ -6,9 +6,11 @@ import (
 	"strings"
 
 	"example.com/fileUploadApp/awssession"
+	_ "example.com/fileUploadApp/configparser"
 	"example.com/fileUploadApp/logging"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -60,7 +62,7 @@ func uploadFile(f *os.File, svc *s3manager.Uploader, fn string) {
 
 	//upload file to s3
 	_, err := svc.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(awssession.Bucket),
+		Bucket: aws.String(viper.GetString("awss3config.s3bucket")),
 		Key:    aws.String(fn),
 		Body:   f,
 	})

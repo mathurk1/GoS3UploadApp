@@ -3,18 +3,13 @@ package awssession
 import (
 	"os"
 
+	_ "example.com/fileUploadApp/configparser"
 	"example.com/fileUploadApp/logging"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/joho/godotenv"
-)
-
-const (
-	//AccessKeyId     = ""
-	//SecretAccessKey = ""
-	Region = "us-east-2"
-	Bucket = "glue-s3-bucket-km"
+	"github.com/spf13/viper"
 )
 
 type awscreds struct {
@@ -57,7 +52,7 @@ func init() {
 	awsCredentials := getAWSCredentials()
 
 	conf := aws.Config{
-		Region:      aws.String(Region),
+		Region:      aws.String(viper.GetString("awss3config.s3region")),
 		Credentials: credentials.NewStaticCredentials(awsCredentials.s3KeyId, awsCredentials.s3SecretKey, ""),
 	}
 	sess, err := session.NewSession(&conf)
@@ -65,7 +60,7 @@ func init() {
 		logging.ErrorLogger.Println("Failed to establish AWS session", err)
 		os.Exit(1)
 	}
-
+	logging.InfoLogger.Println("AWS session created successfully!")
 	Sess = sess
 
 }
