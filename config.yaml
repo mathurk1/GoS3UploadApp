@@ -4,6 +4,7 @@ awss3config:
 
 fileconfig:
   inputdirectory: "/Path/to/the/input/Files"
+  # the file will be uploaded to bucket-name/s3directory1/s3directory2/filename.csv
   s3directory:
     - s3directory1
     - s3directory2
