@@ -1,7 +1,6 @@
 package configparser
 
 import (
-	"fmt"
 	"os"
 
 	"example.com/fileUploadApp/logging"
@@ -16,7 +15,7 @@ func configParser() {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		fmt.Println("fatal error config file: default \n", err)
+		logging.ErrorLogger.Println("fatal error config file: default \n", err)
 		os.Exit(1)
 	}
 
