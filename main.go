@@ -25,6 +25,7 @@ func getListOfFiles(inputDir string) []os.DirEntry {
 	files, err := os.ReadDir(inputDir)
 	if err != nil {
 		logging.ErrorLogger.Println(err)
+		os.Exit(1)
 	}
 
 	// if extension is .csv, append
@@ -74,9 +75,14 @@ func uploadFile(f *os.File, svc *s3manager.Uploader, fn string) {
 // to which the csv file will be uploaded
 func createS3FilePath(f string) string {
 
+	var dp string
 	paths := viper.GetStringSlice("fileconfig.s3directory")
-	paths = append(paths, f)
-	dp := strings.Join(paths, "/")
+	if len(paths) != 0 {
+		paths = append(paths, f)
+		dp = strings.Join(paths, "/")
+	} else {
+		dp = f
+	}
 
 	return dp
 
@@ -88,6 +94,12 @@ func main() {
 	inputDir := viper.GetString("fileconfig.inputdirectory")
 	listOfFiles := getListOfFiles(inputDir)
 	logging.InfoLogger.Printf("list of %d files has been read", len(listOfFiles))
+
+	// check if csv files are present to be uploaded
+	if len(listOfFiles) == 0 {
+		logging.InfoLogger.Println("No files to process, exiting program!")
+		os.Exit(0)
+	}
 
 	// setup connection to s3 bucket
 	svc := s3manager.NewUploader(awssession.Sess)
