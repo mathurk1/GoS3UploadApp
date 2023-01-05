@@ -1,0 +1,9 @@
+awss3config:
+  s3bucket: "bucket-name"
+  s3region: "bucket-region"
+
+fileconfig:
+  inputdirectory: "/Path/to/the/input/Files"
+  s3directory:
+    - s3directory1
+    - s3directory2

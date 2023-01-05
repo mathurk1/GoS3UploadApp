@@ -13,10 +13,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-var (
-	inputDir = ""
-)
-
 // getListOfFiles will accept a directory
 // path and return a slice of all .csv
 // files in the directory as strings
@@ -74,9 +70,22 @@ func uploadFile(f *os.File, svc *s3manager.Uploader, fn string) {
 
 }
 
+// createS3FilePath will return the location
+// to which the csv file will be uploaded
+func createS3FilePath(f string) string {
+
+	paths := viper.GetStringSlice("fileconfig.s3directory")
+	paths = append(paths, f)
+	dp := strings.Join(paths, "/")
+
+	return dp
+
+}
+
 func main() {
 
 	// get list of csvs to be processed
+	inputDir := viper.GetString("fileconfig.inputdirectory")
 	listOfFiles := getListOfFiles(inputDir)
 	logging.InfoLogger.Printf("list of %d files has been read", len(listOfFiles))
 
@@ -87,8 +96,9 @@ func main() {
 	// process files and uploade to s3
 	for _, file := range listOfFiles {
 		logging.InfoLogger.Printf("processing file %s\n", file.Name())
+		s3UploadPath := createS3FilePath(file.Name())
 		f := openFile(filepath.Join(inputDir, file.Name()))
-		uploadFile(f, svc, file.Name())
+		uploadFile(f, svc, s3UploadPath)
 		f.Close()
 	}
 
